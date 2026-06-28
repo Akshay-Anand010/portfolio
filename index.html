@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Akshay Anand — Sr. Software Engineer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060C18;
+      --bg-card: #0C1525;
+      --bg-card-hover: #111E35;
+      --border: rgba(99,102,241,0.18);
+      --border-subtle: rgba(255,255,255,0.07);
+      --accent: #6366F1;
+      --accent-glow: rgba(99,102,241,0.18);
+      --accent-soft: #818CF8;
+      --accent2: #06B6D4;
+      --text: #E2E8F0;
+      --text-muted: #64748B;
+      --text-dim: #94A3B8;
+      --green: #34D399;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
+
+    #three-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.1rem 2.5rem;
+      background: rgba(6,12,24,0.88); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .nav-logo { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--text); letter-spacing: -0.02em; }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { font-family: var(--mono); font-size: 0.72rem; color: var(--text-muted); text-decoration: none; letter-spacing: 0.06em; transition: color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--accent-soft); }
+
+    /* LAYOUT */
+    .container { max-width: 960px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
+    section { padding: 6rem 0; }
+    .eyebrow { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.18em; color: var(--accent); text-transform: uppercase; margin-bottom: 0.85rem; }
+    .section-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700; letter-spacing: -0.03em; color: var(--text); margin-bottom: 0.5rem; }
+    .section-sub { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 3rem; max-width: 520px; line-height: 1.7; }
+    .section-rule { width: 100%; height: 1px; background: linear-gradient(90deg, var(--accent-glow), transparent); margin-bottom: 3.5rem; }
+
+    /* HERO */
+    #hero { min-height: 100vh; display: flex; align-items: center; padding-top: 80px; }
+    .hero-status {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.22);
+      border-radius: 100px; padding: 0.35rem 0.9rem; margin-bottom: 1.75rem;
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(52,211,153,0.4); } 50% { opacity:0.8; box-shadow:0 0 0 6px rgba(52,211,153,0); } }
+    .status-text { font-family: var(--mono); font-size: 0.68rem; color: var(--green); letter-spacing: 0.06em; }
+    .hero-name { font-family: 'Space Grotesk', sans-serif; font-size: clamp(3rem, 7vw, 5.2rem); font-weight: 700; letter-spacing: -0.04em; line-height: 1.0; margin-bottom: 0.9rem; }
+    .hero-name .line2 { color: var(--accent); }
+    .hero-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; font-weight: 400; color: var(--text-dim); margin-bottom: 1.4rem; }
+    .hero-title strong { color: var(--accent-soft); font-weight: 600; }
+    .hero-bio { font-size: 0.92rem; color: var(--text-muted); max-width: 560px; line-height: 1.8; margin-bottom: 2.25rem; }
+    .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--accent); color: #fff; padding: 0.7rem 1.5rem;
+      border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 500;
+      transition: all 0.2s; box-shadow: 0 4px 20px var(--accent-glow);
+    }
+    .btn-primary:hover { background: var(--accent-soft); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(99,102,241,0.35); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: transparent; color: var(--text-dim); padding: 0.7rem 1.4rem;
+      border-radius: 8px; border: 1px solid var(--border-subtle);
+      text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--border); color: var(--accent-soft); background: var(--accent-glow); }
+    .stats-row { display: flex; gap: 2rem; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border-subtle); flex-wrap: wrap; }
+    .stat { display: flex; flex-direction: column; gap: 0.15rem; }
+    .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 700; color: var(--text); letter-spacing: -0.04em; }
+    .stat-num span { color: var(--accent); }
+    .stat-label { font-family: var(--mono); font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+
+    /* SKILLS */
+    .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 1rem; }
+    .skill-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.35rem 1.5rem; transition: all 0.25s; }
+    .skill-card:hover { border-color: var(--border); background: var(--bg-card-hover); transform: translateY(-2px); }
+    .skill-card-label { font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.12em; color: var(--accent); text-transform: uppercase; margin-bottom: 0.85rem; }
+    .skill-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .tag { font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); padding: 0.22rem 0.6rem; border-radius: 5px; transition: all 0.2s; }
+    .tag:hover { border-color: var(--border); color: var(--accent-soft); background: var(--accent-glow); }
+
+    /* EXPERIENCE */
+    .timeline { display: flex; flex-direction: column; }
+    .timeline-item { display: grid; grid-template-columns: 150px 1px 1fr; gap: 0 1.75rem; padding-bottom: 3rem; }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-date { font-family: var(--mono); font-size: 0.67rem; color: var(--text-muted); letter-spacing: 0.03em; padding-top: 0.25rem; text-align: right; line-height: 1.5; }
+    .timeline-line { display: flex; flex-direction: column; align-items: center; }
+    .timeline-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); box-shadow: 0 0 0 2px var(--accent), 0 0 12px var(--accent-glow); flex-shrink: 0; margin-top: 0.2rem; }
+    .timeline-connector { width: 1px; flex: 1; background: linear-gradient(180deg, var(--accent), transparent); margin-top: 8px; opacity: 0.3; }
+    .timeline-item:last-child .timeline-connector { display: none; }
+    .timeline-role { font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
+    .timeline-company { font-size: 0.83rem; color: var(--accent-soft); margin-bottom: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .company-badge { font-family: var(--mono); font-size: 0.6rem; background: var(--accent-glow); border: 1px solid var(--border); color: var(--accent-soft); padding: 0.1rem 0.45rem; border-radius: 4px; letter-spacing: 0.06em; }
+    .timeline-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.75; }
+    .timeline-desc ul { padding-left: 1.1rem; margin-top: 0.5rem; }
+    .timeline-desc li { margin-bottom: 0.35rem; }
+    .timeline-stack { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 1rem; }
+    .metric { display: inline-block; color: var(--green); font-weight: 600; font-family: var(--mono); font-size: 0.82rem; }
+
+    /* EDUCATION */
+    .edu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1rem; }
+    .edu-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.6rem; transition: all 0.25s; }
+    .edu-card:hover { border-color: var(--border); transform: translateY(-2px); }
+    .edu-icon { font-size: 1.4rem; margin-bottom: 0.75rem; }
+    .edu-deg { font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; font-weight: 600; color: var(--text); margin-bottom: 0.3rem; }
+    .edu-inst { font-size: 0.82rem; color: var(--accent-soft); margin-bottom: 0.5rem; }
+    .edu-year { font-family: var(--mono); font-size: 0.67rem; color: var(--text-muted); letter-spacing: 0.05em; }
+    .awards-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .award-pill { display: flex; align-items: center; gap: 0.5rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.6rem 1.1rem; font-size: 0.82rem; color: var(--text-dim); transition: all 0.2s; }
+    .award-pill:hover { border-color: rgba(99,102,241,0.3); color: var(--text); }
+
+    /* ── BLOG ── */
+    #blog { background: linear-gradient(180deg, transparent, rgba(99,102,241,0.03), transparent); }
+
+    /* Admin login */
+    .blog-admin-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .blog-admin-hint { font-family: var(--mono); font-size: 0.68rem; color: var(--text-muted); }
+    .btn-admin {
+      font-family: var(--mono); font-size: 0.7rem; color: var(--accent-soft);
+      background: var(--accent-glow); border: 1px solid var(--border);
+      padding: 0.4rem 0.9rem; border-radius: 6px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
+    }
+    .btn-admin:hover { background: rgba(99,102,241,0.25); }
+
+    /* Admin panel */
+    .admin-panel {
+      display: none;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.75rem; margin-bottom: 2rem;
+    }
+    .admin-panel.open { display: block; }
+    .admin-panel h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 1.25rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-family: var(--mono); font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.4rem; }
+    .form-input, .form-textarea, .form-select {
+      width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle);
+      border-radius: 8px; padding: 0.65rem 0.9rem; color: var(--text);
+      font-family: 'Inter', sans-serif; font-size: 0.85rem; outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
+    .form-textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
+    .form-select { cursor: pointer; }
+    .form-select option { background: #0C1525; }
+    .admin-actions { display: flex; gap: 0.75rem; align-items: center; margin-top: 1.25rem; }
+    .btn-post {
+      background: var(--accent); color: #fff; border: none; border-radius: 8px;
+      padding: 0.65rem 1.4rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-post:hover { background: var(--accent-soft); transform: translateY(-1px); }
+    .btn-cancel { background: transparent; color: var(--text-muted); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.65rem 1.1rem; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+    .btn-cancel:hover { color: var(--text); border-color: var(--border); }
+    .admin-error { font-family: var(--mono); font-size: 0.72rem; color: #F87171; margin-top: 0.5rem; display: none; }
+
+    /* Login modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(6,12,24,0.85); backdrop-filter: blur(8px); z-index: 500; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; width: 340px; max-width: 90vw; }
+    .modal-box h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 600; margin-bottom: 0.35rem; }
+    .modal-box p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+    .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; }
+    .modal-error { font-family: var(--mono); font-size: 0.72rem; color: #F87171; margin-top: 0.5rem; display: none; }
+
+    /* Blog posts */
+    .blog-posts { display: flex; flex-direction: column; gap: 2rem; }
+    .blog-empty {
+      background: var(--bg-card); border: 1px dashed var(--border-subtle);
+      border-radius: 14px; padding: 3rem; text-align: center;
+    }
+    .blog-empty p { font-size: 0.9rem; color: var(--text-muted); }
+    .blog-empty span { font-size: 2rem; display: block; margin-bottom: 0.75rem; }
+
+    .blog-post {
+      background: var(--bg-card); border: 1px solid var(--border-subtle);
+      border-radius: 14px; overflow: hidden; transition: all 0.25s;
+    }
+    .blog-post:hover { border-color: var(--border); transform: translateY(-2px); }
+    .blog-post-header { padding: 1.75rem 1.75rem 0; }
+    .blog-post-meta { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.85rem; flex-wrap: wrap; }
+    .post-tag {
+      font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em;
+      padding: 0.2rem 0.6rem; border-radius: 5px; text-transform: uppercase;
+    }
+    .post-tag.ai { background: rgba(99,102,241,0.12); color: var(--accent-soft); border: 1px solid rgba(99,102,241,0.25); }
+    .post-tag.backend { background: rgba(6,182,212,0.1); color: var(--accent2); border: 1px solid rgba(6,182,212,0.2); }
+    .post-tag.thoughts { background: rgba(52,211,153,0.1); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
+    .post-tag.career { background: rgba(245,158,11,0.1); color: #F59E0B; border: 1px solid rgba(245,158,11,0.2); }
+    .post-date { font-family: var(--mono); font-size: 0.65rem; color: var(--text-muted); }
+    .post-read-time { font-family: var(--mono); font-size: 0.65rem; color: var(--text-muted); }
+    .blog-post h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.15rem; font-weight: 600; color: var(--text); margin-bottom: 0.6rem; line-height: 1.35; }
+    .blog-post-body { padding: 0 1.75rem 1.25rem; font-size: 0.87rem; color: var(--text-muted); line-height: 1.75; }
+    .blog-post-body.collapsed { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .post-footer { padding: 1rem 1.75rem; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+    .btn-read-more { font-family: var(--mono); font-size: 0.68rem; color: var(--accent-soft); background: none; border: none; cursor: pointer; letter-spacing: 0.04em; transition: color 0.2s; }
+    .btn-read-more:hover { color: var(--accent); }
+    .post-actions { display: flex; gap: 0.5rem; }
+    .btn-delete { font-family: var(--mono); font-size: 0.65rem; color: #F87171; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); border-radius: 5px; padding: 0.2rem 0.55rem; cursor: pointer; transition: all 0.2s; display: none; }
+    .btn-delete:hover { background: rgba(248,113,113,0.18); }
+    .btn-delete.visible { display: inline-block; }
+
+    /* Comments */
+    .comments-section { padding: 0 1.75rem 1.75rem; border-top: 1px solid var(--border-subtle); margin-top: 0; }
+    .comments-title { font-family: var(--mono); font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; padding-top: 1.25rem; margin-bottom: 1rem; }
+    .comment { padding: 0.85rem 0; border-bottom: 1px solid var(--border-subtle); }
+    .comment:last-of-type { border-bottom: none; }
+    .comment-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem; flex-wrap: wrap; }
+    .comment-author { font-family: 'Space Grotesk', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--text-dim); }
+    .comment-date { font-family: var(--mono); font-size: 0.62rem; color: var(--text-muted); }
+    .comment-text { font-size: 0.83rem; color: var(--text-muted); line-height: 1.65; }
+
+    /* Comment form */
+    .comment-form { margin-top: 1.25rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1.25rem; }
+    .comment-form h4 { font-family: var(--mono); font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.85rem; }
+    .comment-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .btn-comment { background: transparent; border: 1px solid var(--border); color: var(--accent-soft); border-radius: 7px; padding: 0.55rem 1.1rem; font-size: 0.8rem; font-family: var(--mono); cursor: pointer; transition: all 0.2s; }
+    .btn-comment:hover { background: var(--accent-glow); border-color: var(--accent); }
+
+    /* CONTACT */
+    .contact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 1rem; }
+    .contact-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.25rem 1.5rem; text-decoration: none; transition: all 0.25s; display: flex; align-items: center; gap: 0.9rem; }
+    .contact-card:hover { border-color: var(--border); background: var(--bg-card-hover); transform: translateY(-2px); }
+    .contact-icon { width: 38px; height: 38px; border-radius: 9px; background: var(--accent-glow); border: 1px solid rgba(99,102,241,0.25); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--accent-soft); }
+    .contact-label { font-family: var(--mono); font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+    .contact-value { font-size: 0.78rem; color: var(--text-dim); font-weight: 500; }
+
+    footer { border-top: 1px solid var(--border-subtle); padding: 2rem; text-align: center; position: relative; z-index: 1; }
+    footer p { font-family: var(--mono); font-size: 0.67rem; color: var(--text-muted); letter-spacing: 0.05em; }
+
+    /* REVEAL */
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-d1 { transition-delay: 0.1s; }
+    .reveal-d2 { transition-delay: 0.2s; }
+    .reveal-d3 { transition-delay: 0.3s; }
+
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.25rem; }
+      .nav-links { gap: 1rem; }
+      .container { padding: 0 1.25rem; }
+      section { padding: 4rem 0; }
+      .timeline-item { grid-template-columns: 80px 1px 1fr; gap: 0 1rem; }
+      .comment-form-row { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      #three-canvas { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="three-canvas"></canvas>
+
+<!-- Login Modal -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal-box">
+    <h3>Admin Login</h3>
+    <p>Enter your email to post and manage blog entries.</p>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" class="form-input" id="loginEmail" placeholder="your@email.com" />
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" class="form-input" id="loginPass" placeholder="••••••••" />
+    </div>
+    <div class="modal-error" id="loginError">Incorrect credentials.</div>
+    <div class="modal-actions">
+      <button class="btn-post" onclick="doLogin()">Sign in</button>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">AA<span>.</span></div>
+  <ul class="nav-links">
+    <li><a href="#hero">home</a></li>
+    <li><a href="#skills">skills</a></li>
+    <li><a href="#experience">experience</a></li>
+    <li><a href="#education">education</a></li>
+    <li><a href="#blog">blog</a></li>
+    <li><a href="#contact">contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-status">
+      <span class="status-dot"></span>
+      <span class="status-text">Open to opportunities · Bengaluru, India</span>
+    </div>
+    <h1 class="hero-name reveal">Akshay<br /><span class="line2">Anand</span></h1>
+    <p class="hero-title reveal reveal-d1">
+      Sr. Software Engineer at <strong>Visa</strong> &nbsp;·&nbsp; Distributed Systems &nbsp;·&nbsp; AI/ML Explorer
+    </p>
+    <p class="hero-bio reveal reveal-d2">
+      Backend engineer with 5+ years crafting scalable, resilient systems across e-commerce,
+      supply chain, and identity security. Currently expanding into Artificial Intelligence &amp;
+      Machine Learning through a PG program at IIIT Hyderabad — bridging robust backend
+      engineering with intelligent, data-driven systems.
+    </p>
+    <div class="hero-cta reveal reveal-d3">
+      <a href="mailto:personal2akshay@gmail.com" class="btn-primary">✉ &nbsp;Get in touch</a>
+      <a href="https://www.linkedin.com/in/akshay1998" target="_blank" class="btn-ghost">↗ &nbsp;LinkedIn</a>
+    </div>
+    <div class="stats-row reveal reveal-d3">
+      <div class="stat"><span class="stat-num">5<span>+</span></span><span class="stat-label">Years exp.</span></div>
+      <div class="stat"><span class="stat-num">3</span><span class="stat-label">Companies</span></div>
+      <div class="stat"><span class="stat-num">40<span>%</span></span><span class="stat-label">DB load reduced</span></div>
+      <div class="stat"><span class="stat-num">2</span><span class="stat-label">Hackathon wins</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="container">
+    <div class="reveal">
+      <p class="eyebrow">// core competencies</p>
+      <h2 class="section-title">Skills &amp; Stack</h2>
+      <p class="section-sub">Five years of production-hardened tools, from backend frameworks to cloud-native infra.</p>
+      <div class="section-rule"></div>
+    </div>
+    <div class="skills-grid">
+      <div class="skill-card reveal">
+        <div class="skill-card-label">⚡ Languages &amp; Frameworks</div>
+        <div class="skill-tags"><span class="tag">Java</span><span class="tag">Spring Boot</span><span class="tag">REST APIs</span><span class="tag">Microservices</span><span class="tag">OOP</span><span class="tag">DDD</span><span class="tag">TDD</span></div>
+      </div>
+      <div class="skill-card reveal reveal-d1">
+        <div class="skill-card-label">📨 Messaging &amp; Streaming</div>
+        <div class="skill-tags"><span class="tag">Apache Kafka</span><span class="tag">RabbitMQ</span><span class="tag">Event-Driven</span><span class="tag">Domain Events</span></div>
+      </div>
+      <div class="skill-card reveal reveal-d2">
+        <div class="skill-card-label">☁️ Cloud &amp; Infrastructure</div>
+        <div class="skill-tags"><span class="tag">GCP</span><span class="tag">AWS</span><span class="tag">Docker</span><span class="tag">Kubernetes</span><span class="tag">CI/CD</span><span class="tag">Azure APIM</span></div>
+      </div>
+      <div class="skill-card reveal">
+        <div class="skill-card-label">🗄️ Databases &amp; Caching</div>
+        <div class="skill-tags"><span class="tag">MySQL</span><span class="tag">MongoDB</span><span class="tag">Redis</span><span class="tag">Caching Strategies</span><span class="tag">SQL</span><span class="tag">NoSQL</span></div>
+      </div>
+      <div class="skill-card reveal reveal-d1">
+        <div class="skill-card-label">📡 Observability &amp; DevOps</div>
+        <div class="skill-tags"><span class="tag">Grafana</span><span class="tag">Datadog</span><span class="tag">Kibana</span><span class="tag">Git</span><span class="tag">Maven</span><span class="tag">Postman</span></div>
+      </div>
+      <div class="skill-card reveal reveal-d2">
+        <div class="skill-card-label">🤖 AI / ML</div>
+        <div class="skill-tags"><span class="tag">Python</span><span class="tag">PyTorch</span><span class="tag">Transformers</span><span class="tag">LLMs</span><span class="tag">Claude API</span><span class="tag">HuggingFace</span><span class="tag">LangChain</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="container">
+    <div class="reveal">
+      <p class="eyebrow">// career journey</p>
+      <h2 class="section-title">Experience</h2>
+      <p class="section-sub">5+ years building production systems at scale across payments, e-commerce, and identity security.</p>
+      <div class="section-rule"></div>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item reveal">
+        <div class="timeline-date">Nov 2025<br/>Present</div>
+        <div class="timeline-line"><div class="timeline-dot"></div><div class="timeline-connector"></div></div>
+        <div class="timeline-content">
+          <div class="timeline-role">Senior Software Engineer</div>
+          <div class="timeline-company">Visa · Bengaluru <span class="company-badge">CURRENT</span></div>
+          <div class="timeline-desc">
+            Part of VAS PD — working at the intersection of Security &amp; Identity for global payment infrastructure.
+            <ul>
+              <li>Designing systems with OAuth 2.0, OpenID Connect (OIDC) and access control protocols</li>
+              <li>Leading FR &amp; NFR analysis for identity platform scalability and performance</li>
+              <li>Driving technical documentation and knowledge management across teams</li>
+            </ul>
+          </div>
+          <div class="timeline-stack"><span class="tag">OAuth 2.0</span><span class="tag">OIDC</span><span class="tag">Security</span><span class="tag">Identity</span><span class="tag">Distributed Systems</span></div>
+        </div>
+      </div>
+      <div class="timeline-item reveal">
+        <div class="timeline-date">Apr 2024<br/>Oct 2025</div>
+        <div class="timeline-line"><div class="timeline-dot"></div><div class="timeline-connector"></div></div>
+        <div class="timeline-content">
+          <div class="timeline-role">Developer</div>
+          <div class="timeline-company">Thoughtworks · John Deere · Bengaluru</div>
+          <div class="timeline-desc">
+            Built scalable e-commerce services powering global cart, availability, and promotions.
+            <ul>
+              <li>Designed a scalable promotion engine integrating Voucherify for flexible discount rules</li>
+              <li>Reduced DB load by <span class="metric">~40%</span> through intelligent caching and service optimisation</li>
+              <li>Built Kafka-based event consumers for real-time domain event processing</li>
+              <li>Architected the SaveForLater feature — models, API contracts &amp; implementation guidelines</li>
+              <li>Established platform observability with Grafana + Datadog dashboards</li>
+              <li>Strengthened API governance via Azure APIM with rate limiting &amp; auth</li>
+            </ul>
+          </div>
+          <div class="timeline-stack"><span class="tag">Java</span><span class="tag">Spring Boot</span><span class="tag">Kafka</span><span class="tag">Azure APIM</span><span class="tag">Grafana</span><span class="tag">Datadog</span><span class="tag">TDD</span></div>
+        </div>
+      </div>
+      <div class="timeline-item reveal">
+        <div class="timeline-date">Sep 2021<br/>Apr 2024</div>
+        <div class="timeline-line"><div class="timeline-dot"></div><div class="timeline-connector"></div></div>
+        <div class="timeline-content">
+          <div class="timeline-role">Software Engineer</div>
+          <div class="timeline-company">Manhattan Associates · Bengaluru</div>
+          <div class="timeline-desc">
+            Core contributor to Manhattan Active Omni (MAO) — a leading Order Management System used by global retailers.
+            <ul>
+              <li>Integrated PayPal BRT, Cybersource &amp; Aurus payment gateways with full auth/capture/refund flows</li>
+              <li>Enhanced OMS workflows: order creation, allocation, fulfilment, and returns</li>
+              <li>Designed scalable MAO architecture extensions for long-term platform maintainability</li>
+              <li>Investigated production incidents, analysed logs, and optimised workflows for stability</li>
+            </ul>
+          </div>
+          <div class="timeline-stack"><span class="tag">Java</span><span class="tag">Spring Boot</span><span class="tag">Microservices</span><span class="tag">SQL</span><span class="tag">Kibana</span><span class="tag">REST APIs</span></div>
+        </div>
+      </div>
+      <div class="timeline-item reveal">
+        <div class="timeline-date">Jan 2021<br/>Jun 2021</div>
+        <div class="timeline-line"><div class="timeline-dot"></div><div class="timeline-connector"></div></div>
+        <div class="timeline-content">
+          <div class="timeline-role">Software Engineer Intern</div>
+          <div class="timeline-company">Infoblox</div>
+          <div class="timeline-desc">
+            Built an automated email alert system in Apex for Salesforce CRM. Documented the Receipt Generation Module in a centralised repository for the IT team.
+          </div>
+          <div class="timeline-stack"><span class="tag">Salesforce</span><span class="tag">Apex</span><span class="tag">CRM</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EDUCATION -->
+<section id="education">
+  <div class="container">
+    <div class="reveal">
+      <p class="eyebrow">// academic background</p>
+      <h2 class="section-title">Education</h2>
+      <div class="section-rule"></div>
+    </div>
+    <div class="edu-grid">
+      <div class="edu-card reveal">
+        <div class="edu-icon">🤖</div>
+        <div class="edu-deg">PG — Artificial Intelligence &amp; Machine Learning</div>
+        <div class="edu-inst">International Institute of Information Technology, Hyderabad</div>
+        <div class="edu-year">2026 · In progress</div>
+      </div>
+      <div class="edu-card reveal reveal-d1">
+        <div class="edu-icon">🎓</div>
+        <div class="edu-deg">Bachelor of Engineering — Computer Science</div>
+        <div class="edu-inst">BNM Institute of Technology · VTU</div>
+        <div class="edu-year">2017 — 2021</div>
+      </div>
+    </div>
+    <div style="margin-top:3rem;" class="reveal">
+      <p class="eyebrow" style="margin-bottom:1.25rem;">// recognition</p>
+      <div class="awards-row">
+        <div class="award-pill">🏆 IEEE Hackathon Winner — Mobile Control Robotics</div>
+        <div class="award-pill">🥈 Smart India Hackathon 2020 — Finalist</div>
+        <div class="award-pill">☁️ AWS Fundamentals: Cloud Native</div>
+        <div class="award-pill">🏦 JP Morgan Virtual Experience</div>
+        <div class="award-pill">💻 Java Certified — HackerRank</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BLOG -->
+<section id="blog">
+  <div class="container">
+    <div class="reveal">
+      <p class="eyebrow">// thoughts &amp; writings</p>
+      <h2 class="section-title">Blog</h2>
+      <p class="section-sub">Notes on distributed systems, AI/ML, engineering culture, and whatever's on my mind. Anyone can comment.</p>
+      <div class="section-rule"></div>
+    </div>
+
+    <div class="blog-admin-bar reveal">
+      <span class="blog-admin-hint" id="adminStatus">// public view</span>
+      <button class="btn-admin" id="adminToggleBtn" onclick="openLoginModal()">Admin Login</button>
+    </div>
+
+    <!-- Admin write panel -->
+    <div class="admin-panel" id="adminPanel">
+      <h3>✍ New Post</h3>
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" class="form-input" id="postTitle" placeholder="What's on your mind?" />
+      </div>
+      <div class="form-group">
+        <label>Tag</label>
+        <select class="form-select form-input" id="postTag">
+          <option value="thoughts">Thoughts</option>
+          <option value="backend">Backend</option>
+          <option value="ai">AI / ML</option>
+          <option value="career">Career</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Content</label>
+        <textarea class="form-textarea" id="postContent" placeholder="Write your post here..."></textarea>
+      </div>
+      <div class="admin-error" id="postError">Please fill in all fields.</div>
+      <div class="admin-actions">
+        <button class="btn-post" onclick="publishPost()">Publish Post</button>
+        <button class="btn-cancel" onclick="adminLogout()">Log out</button>
+      </div>
+    </div>
+
+    <!-- Posts list -->
+    <div class="blog-posts" id="blogPosts">
+      <div class="blog-empty" id="blogEmpty">
+        <span>📝</span>
+        <p>No posts yet. Check back soon.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container">
+    <div class="reveal">
+      <p class="eyebrow">// let's connect</p>
+      <h2 class="section-title">Get in Touch</h2>
+      <p class="section-sub">Open to engineering discussions, AI/ML collaboration, and new opportunities.</p>
+      <div class="section-rule"></div>
+    </div>
+    <div class="contact-grid">
+      <a href="mailto:personal2akshay@gmail.com" class="contact-card reveal">
+        <div class="contact-icon">✉</div>
+        <div><div class="contact-label">Email</div><div class="contact-value">personal2akshay@gmail.com</div></div>
+      </a>
+      <a href="https://www.linkedin.com/in/akshay1998" target="_blank" class="contact-card reveal reveal-d1">
+        <div class="contact-icon">in</div>
+        <div><div class="contact-label">LinkedIn</div><div class="contact-value">linkedin.com/in/akshay1998</div></div>
+      </a>
+      <a href="tel:+918217486251" class="contact-card reveal reveal-d2">
+        <div class="contact-icon">☎</div>
+        <div><div class="contact-label">Phone</div><div class="contact-value">+91 82174 86251</div></div>
+      </a>
+      <a href="https://andy1998440.github.io/akshayanand/" target="_blank" class="contact-card reveal reveal-d3">
+        <div class="contact-icon">🔗</div>
+        <div><div class="contact-label">Portfolio</div><div class="contact-value">andy1998440.github.io</div></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 Akshay Anand &nbsp;·&nbsp; Engineered with intention &nbsp;·&nbsp; Bengaluru, India</p>
+</footer>
+
+<script>
+// ── THREE.JS ──
+(function(){
+  const canvas = document.getElementById('three-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setClearColor(0x000000,0);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 1000);
+  camera.position.z = 30;
+  function resize(){ renderer.setSize(innerWidth,innerHeight); camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); }
+  resize(); window.addEventListener('resize', resize);
+  const count = 160;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count*3);
+  const vel = [];
+  for(let i=0;i<count;i++){
+    pos[i*3]=(Math.random()-.5)*80; pos[i*3+1]=(Math.random()-.5)*60; pos[i*3+2]=(Math.random()-.5)*40;
+    vel.push({x:(Math.random()-.5)*.025,y:(Math.random()-.5)*.025,z:(Math.random()-.5)*.01});
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const mat = new THREE.PointsMaterial({color:0x6366F1,size:0.22,transparent:true,opacity:0.65,sizeAttenuation:true});
+  const points = new THREE.Points(geo,mat);
+  scene.add(points);
+  const lp = new Float32Array(count*count*6);
+  const lgeo = new THREE.BufferGeometry();
+  lgeo.setAttribute('position',new THREE.BufferAttribute(lp,3));
+  const lmat = new THREE.LineBasicMaterial({color:0x6366F1,transparent:true,opacity:0.08});
+  const lines = new THREE.LineSegments(lgeo,lmat);
+  scene.add(lines);
+  let mx=0,my=0;
+  document.addEventListener('mousemove',e=>{mx=(e.clientX/innerWidth-.5)*.4;my=(e.clientY/innerHeight-.5)*.4;});
+  const maxD=18;
+  function animate(){
+    requestAnimationFrame(animate);
+    for(let i=0;i<count;i++){
+      pos[i*3]+=vel[i].x; pos[i*3+1]+=vel[i].y; pos[i*3+2]+=vel[i].z;
+      if(Math.abs(pos[i*3])>40)vel[i].x*=-1;
+      if(Math.abs(pos[i*3+1])>30)vel[i].y*=-1;
+      if(Math.abs(pos[i*3+2])>20)vel[i].z*=-1;
+    }
+    geo.attributes.position.needsUpdate=true;
+    let li=0;
+    for(let i=0;i<count&&li<lp.length-6;i++)for(let j=i+1;j<count&&li<lp.length-6;j++){
+      const dx=pos[i*3]-pos[j*3],dy=pos[i*3+1]-pos[j*3+1],dz=pos[i*3+2]-pos[j*3+2];
+      if(Math.sqrt(dx*dx+dy*dy+dz*dz)<maxD){
+        lp[li++]=pos[i*3];lp[li++]=pos[i*3+1];lp[li++]=pos[i*3+2];
+        lp[li++]=pos[j*3];lp[li++]=pos[j*3+1];lp[li++]=pos[j*3+2];
+      }
+    }
+    for(let k=li;k<lp.length;k++)lp[k]=0;
+    lgeo.attributes.position.needsUpdate=true; lgeo.setDrawRange(0,li/3);
+    camera.position.x+=(mx*5-camera.position.x)*.04;
+    camera.position.y+=(-my*3-camera.position.y)*.04;
+    camera.lookAt(scene.position);
+    points.rotation.y+=.0005; lines.rotation.y+=.0005;
+    renderer.render(scene,camera);
+  }
+  animate();
+})();
+
+// ── SCROLL REVEAL ──
+const obs = new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('visible');obs.unobserve(x.target);}}),{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// ── NAV ACTIVE ──
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+window.addEventListener('scroll',()=>{
+  let cur='';
+  sections.forEach(s=>{if(window.scrollY>=s.offsetTop-120)cur=s.id;});
+  navLinks.forEach(a=>{a.classList.toggle('active',a.getAttribute('href')==='#'+cur);});
+},{passive:true});
+
+// ── BLOG SYSTEM ──
+const ADMIN_EMAIL = 'akshayanand771@gmail.com';
+const ADMIN_PASS  = 'akshay@blog2024'; // change this to your preferred password
+let isAdmin = false;
+let posts = JSON.parse(localStorage.getItem('aa_posts') || '[]');
+
+function savePost() { localStorage.setItem('aa_posts', JSON.stringify(posts)); }
+
+function openLoginModal() {
+  if (isAdmin) { adminLogout(); return; }
+  document.getElementById('loginModal').classList.add('open');
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').style.display = 'none';
+}
+function closeModal() { document.getElementById('loginModal').classList.remove('open'); }
+
+function doLogin() {
+  const e = document.getElementById('loginEmail').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if (e === ADMIN_EMAIL && p === ADMIN_PASS) {
+    isAdmin = true;
+    closeModal();
+    document.getElementById('adminPanel').classList.add('open');
+    document.getElementById('adminStatus').textContent = '// admin · ' + ADMIN_EMAIL;
+    document.getElementById('adminToggleBtn').textContent = 'Log out';
+    renderPosts();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+function adminLogout() {
+  isAdmin = false;
+  document.getElementById('adminPanel').classList.remove('open');
+  document.getElementById('adminStatus').textContent = '// public view';
+  document.getElementById('adminToggleBtn').textContent = 'Admin Login';
+  renderPosts();
+}
+
+function publishPost() {
+  const title   = document.getElementById('postTitle').value.trim();
+  const content = document.getElementById('postContent').value.trim();
+  const tag     = document.getElementById('postTag').value;
+  const err     = document.getElementById('postError');
+  if (!title || !content) { err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  const words = content.split(/\s+/).length;
+  const readTime = Math.max(1, Math.round(words / 200));
+  posts.unshift({
+    id: Date.now(),
+    title, content, tag,
+    date: new Date().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}),
+    readTime,
+    comments: []
+  });
+  savePost();
+  document.getElementById('postTitle').value = '';
+  document.getElementById('postContent').value = '';
+  renderPosts();
+}
+
+function deletePost(id) {
+  if (!confirm('Delete this post?')) return;
+  posts = posts.filter(p => p.id !== id);
+  savePost();
+  renderPosts();
+}
+
+function toggleExpand(id) {
+  const body = document.getElementById('body_' + id);
+  const btn  = document.getElementById('readbtn_' + id);
+  if (body.classList.contains('collapsed')) {
+    body.classList.remove('collapsed');
+    btn.textContent = '↑ collapse';
+  } else {
+    body.classList.add('collapsed');
+    btn.textContent = '↓ read more';
+  }
+}
+
+function submitComment(id) {
+  const name = document.getElementById('cname_' + id).value.trim();
+  const text  = document.getElementById('ctext_' + id).value.trim();
+  if (!name || !text) return;
+  const post = posts.find(p => p.id === id);
+  if (!post) return;
+  post.comments.push({
+    name, text,
+    date: new Date().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'})
+  });
+  savePost();
+  document.getElementById('cname_' + id).value = '';
+  document.getElementById('ctext_' + id).value = '';
+  renderPosts();
+}
+
+function renderPosts() {
+  const container = document.getElementById('blogPosts');
+  const empty     = document.getElementById('blogEmpty');
+  if (posts.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  // Remove old post elements (keep empty div)
+  const old = container.querySelectorAll('.blog-post');
+  old.forEach(el => el.remove());
+
+  posts.forEach(post => {
+    const el = document.createElement('div');
+    el.className = 'blog-post';
+    el.innerHTML = `
+      <div class="blog-post-header">
+        <div class="blog-post-meta">
+          <span class="post-tag ${post.tag}">${post.tag}</span>
+          <span class="post-date">${post.date}</span>
+          <span class="post-read-time">· ${post.readTime} min read</span>
+        </div>
+        <h3>${escHtml(post.title)}</h3>
+      </div>
+      <div class="blog-post-body collapsed" id="body_${post.id}">${escHtml(post.content)}</div>
+      <div class="post-footer">
+        <button class="btn-read-more" id="readbtn_${post.id}" onclick="toggleExpand(${post.id})">↓ read more</button>
+        <div class="post-actions">
+          <button class="btn-delete ${isAdmin ? 'visible' : ''}" onclick="deletePost(${post.id})">delete</button>
+        </div>
+      </div>
+      <div class="comments-section">
+        <div class="comments-title">${post.comments.length} comment${post.comments.length !== 1 ? 's' : ''}</div>
+        ${post.comments.map(c => `
+          <div class="comment">
+            <div class="comment-header">
+              <span class="comment-author">${escHtml(c.name)}</span>
+              <span class="comment-date">${c.date}</span>
+            </div>
+            <div class="comment-text">${escHtml(c.text)}</div>
+          </div>
+        `).join('')}
+        <div class="comment-form">
+          <h4>Leave a comment</h4>
+          <div class="comment-form-row">
+            <input type="text" class="form-input" id="cname_${post.id}" placeholder="Your name" />
+            <input type="text" class="form-input" placeholder="(optional email)" id="cemail_${post.id}" />
+          </div>
+          <div class="form-group">
+            <textarea class="form-textarea" id="ctext_${post.id}" placeholder="Share your thoughts..." style="min-height:80px;"></textarea>
+          </div>
+          <button class="btn-comment" onclick="submitComment(${post.id})">Post comment →</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(el);
+  });
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;').replace(/\n/g,'<br>');
+}
+
+// Init
+renderPosts();
+
+// Login on Enter key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginModal').classList.contains('open')) doLogin();
+});
+</script>
+</body>
+</html>
